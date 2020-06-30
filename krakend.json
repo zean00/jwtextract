@@ -1,0 +1,50 @@
+{
+    "version": 2,
+    "plugin": {
+        "pattern":".so",
+        "folder": "/"
+    },
+    "extra_config": {
+      "github_com/devopsfaith/krakend/transport/http/server/handler": {
+        "name": "JWTXtractPlugin",
+        "claimmap": {
+            "sub" : "subject" 
+        }
+     },
+     "github_com/devopsfaith/krakend-gologging": {
+        "level":  "DEBUG",
+        "prefix": "[KRAKEND]",
+        "syslog": false,
+        "stdout": true
+      }
+    },
+    "timeout": "3000ms",
+    "cache_ttl": "300s",
+    "output_encoding": "no-op",
+    "name": "CoolUserService",
+    "port": 8000,
+    "endpoints": [
+      {
+        "endpoint": "/head",
+        "method": "GET",
+        "extra_config": {},
+        "output_encoding": "no-op",
+        "concurrent_calls": 1,
+        "headers_to_pass": [
+          "*"
+        ],
+        "querystring_params": [],
+        "backend": [
+          {
+            "method": "GET",
+            "host": [ "http://host.docker.internal:8080" ],
+            "url_pattern": "/head",
+            "disable_host_sanitize": false,
+            "encoding": "no-op",
+            "sd": "static",
+            "extra_config": {}
+          }
+        ]
+      }
+    ]
+  }
