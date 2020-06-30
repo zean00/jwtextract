@@ -24,7 +24,7 @@ func ProxyFactory(l logging.Logger, pf proxy.Factory) proxy.FactoryFunc {
 		if err != nil {
 			return next, err
 		}
-		claimMap, ok := configGetter(cfg.ExtraConfig).(map[string]string)
+		claimMap, ok := configGetter(cfg.ExtraConfig).(map[string]interface{})
 		if !ok {
 			l.Debug("No config for jwtextract ")
 			return next, nil
@@ -34,7 +34,7 @@ func ProxyFactory(l logging.Logger, pf proxy.Factory) proxy.FactoryFunc {
 	})
 }
 
-func newProxy(l logging.Logger, claimMap map[string]string, next proxy.Proxy) proxy.Proxy {
+func newProxy(l logging.Logger, claimMap map[string]interface{}, next proxy.Proxy) proxy.Proxy {
 	return func(ctx context.Context, r *proxy.Request) (*proxy.Response, error) {
 		if err := extractClaim(claimMap, r); err != nil {
 			l.Error(err)
@@ -47,12 +47,12 @@ func newProxy(l logging.Logger, claimMap map[string]string, next proxy.Proxy) pr
 func configGetter(cfg config.ExtraConfig) interface{} {
 	v, ok := cfg[Namespace]
 	if !ok {
-		return make(map[string]string)
+		return nil
 	}
 	return v
 }
 
-func extractClaim(claimMap map[string]string, r *proxy.Request) error {
+func extractClaim(claimMap map[string]interface{}, r *proxy.Request) error {
 	token := r.Headers[authHeader][0]
 	if token == "" {
 		return errors.New("Token is empty, skip extracting ")
@@ -79,7 +79,7 @@ func extractClaim(claimMap map[string]string, r *proxy.Request) error {
 	for k, v := range data {
 		key, ok := claimMap[k]
 		if ok {
-			r.Headers[key] = []string{fmt.Sprintf("%v", v)}
+			r.Headers[key.(string)] = []string{fmt.Sprintf("%v", v)}
 		} else {
 			r.Headers[k] = []string{fmt.Sprintf("%v", v)}
 		}
