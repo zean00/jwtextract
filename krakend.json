@@ -19,8 +19,11 @@
         "method": "GET",
         "extra_config": {
           "github_com/zean00/jwtextract": {
-            "sub" : "subject",
-            "aud" : "audience"
+            "extract_all" : false,
+            "claim_map" : {
+              "sub" : "subject",
+              "aud" : "audience"
+            }
          }
         },
         "output_encoding": "no-op",
