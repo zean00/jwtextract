@@ -1,9 +1,6 @@
 {
     "version": 2,
     "extra_config": {
-      "github.com/zean00/jwtextract": {
-        "sub" : "subject" 
-     },
      "github_com/devopsfaith/krakend-gologging": {
         "level":  "DEBUG",
         "prefix": "[KRAKEND]",
@@ -20,7 +17,12 @@
       {
         "endpoint": "/head",
         "method": "GET",
-        "extra_config": {},
+        "extra_config": {
+          "github_com/zean00/jwtextract": {
+            "sub" : "subject",
+            "aud" : "audience"
+         }
+        },
         "output_encoding": "no-op",
         "concurrent_calls": 1,
         "headers_to_pass": [

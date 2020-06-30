@@ -14,7 +14,7 @@ import (
 )
 
 const authHeader = "Authorization"
-const Namespace = "github.com/zean00/jwtextract"
+const Namespace = "github_com/zean00/jwtextract"
 
 // ProxyFactory creates an proxy factory over the injected one adding a JSON Schema
 // validator middleware to the pipe when required
@@ -24,12 +24,13 @@ func ProxyFactory(l logging.Logger, pf proxy.Factory) proxy.FactoryFunc {
 		if err != nil {
 			return next, err
 		}
+
 		claimMap, ok := configGetter(cfg.ExtraConfig).(map[string]interface{})
 		if !ok {
-			l.Debug("No config for jwtextract ")
+			l.Debug("[jwtextract] No config for jwtextract ")
 			return next, nil
 		}
-		l.Debug("Claim map ", claimMap)
+		l.Debug("[jwtextract] Claim map ", claimMap)
 		return newProxy(l, claimMap, next), nil
 	})
 }
@@ -37,7 +38,7 @@ func ProxyFactory(l logging.Logger, pf proxy.Factory) proxy.FactoryFunc {
 func newProxy(l logging.Logger, claimMap map[string]interface{}, next proxy.Proxy) proxy.Proxy {
 	return func(ctx context.Context, r *proxy.Request) (*proxy.Response, error) {
 		if err := extractClaim(claimMap, r); err != nil {
-			l.Error(err)
+			l.Error("[jwtextract]", err)
 			return next(ctx, r)
 		}
 		return next(ctx, r)
