@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/devopsfaith/krakend/config"
+	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
 )
 
@@ -17,7 +18,7 @@ const Namespace = "github.com/zean00/jwtextract"
 
 // ProxyFactory creates an proxy factory over the injected one adding a JSON Schema
 // validator middleware to the pipe when required
-func ProxyFactory(pf proxy.Factory) proxy.FactoryFunc {
+func ProxyFactory(l logging.Logger, pf proxy.Factory) proxy.FactoryFunc {
 	return proxy.FactoryFunc(func(cfg *config.EndpointConfig) (proxy.Proxy, error) {
 		next, err := pf.New(cfg)
 		if err != nil {
@@ -25,16 +26,18 @@ func ProxyFactory(pf proxy.Factory) proxy.FactoryFunc {
 		}
 		claimMap, ok := configGetter(cfg.ExtraConfig).(map[string]string)
 		if !ok {
+			l.Debug("No config for jwtextract ")
 			return next, nil
 		}
-		return newProxy(claimMap, next), nil
+		l.Debug("Claim map ", claimMap)
+		return newProxy(l, claimMap, next), nil
 	})
 }
 
-func newProxy(claimMap map[string]string, next proxy.Proxy) proxy.Proxy {
+func newProxy(l logging.Logger, claimMap map[string]string, next proxy.Proxy) proxy.Proxy {
 	return func(ctx context.Context, r *proxy.Request) (*proxy.Response, error) {
 		if err := extractClaim(claimMap, r); err != nil {
-			fmt.Println(err)
+			l.Error(err)
 			return next(ctx, r)
 		}
 		return next(ctx, r)
@@ -44,7 +47,7 @@ func newProxy(claimMap map[string]string, next proxy.Proxy) proxy.Proxy {
 func configGetter(cfg config.ExtraConfig) interface{} {
 	v, ok := cfg[Namespace]
 	if !ok {
-		return nil
+		return make(map[string]string)
 	}
 	return v
 }

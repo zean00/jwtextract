@@ -1,15 +1,8 @@
 {
     "version": 2,
-    "plugin": {
-        "pattern":".so",
-        "folder": "/"
-    },
     "extra_config": {
-      "github_com/devopsfaith/krakend/transport/http/server/handler": {
-        "name": "JWTXtractPlugin",
-        "claimmap": {
-            "sub" : "subject" 
-        }
+      "github.com/zean00/jwtextract": {
+        "sub" : "subject" 
      },
      "github_com/devopsfaith/krakend-gologging": {
         "level":  "DEBUG",
