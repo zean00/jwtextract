@@ -42,6 +42,41 @@ func ProxyFactory(l logging.Logger, pf proxy.Factory) proxy.FactoryFunc {
 	})
 }
 
+//BackendFactory create backend factory
+func BackendFactory(l logging.Logger, bf proxy.BackendFactory) proxy.BackendFactory {
+
+	return func(cfg *config.Backend) proxy.Proxy {
+		conf := configGetter(cfg.ExtraConfig)
+
+		if conf == nil {
+			l.Debug("[jwtextract] No config for jwtextract ")
+		} else {
+			l.Debug("[jwtextract] Claim map ", conf.ClaimMap)
+		}
+
+		return Middleware(l, conf)(bf(cfg))
+	}
+}
+
+//Middleware create backend middleware
+func Middleware(l logging.Logger, config *xtraConfig) proxy.Middleware {
+	return func(next ...proxy.Proxy) proxy.Proxy {
+		if len(next) > 1 {
+			panic(proxy.ErrTooManyProxies)
+		}
+		if len(next) < 1 {
+			panic(proxy.ErrNotEnoughProxies)
+		}
+		return func(ctx context.Context, req *proxy.Request) (*proxy.Response, error) {
+			if err := extractClaim(config, req); err != nil {
+				l.Error("[jwtextract]", err)
+			}
+			resp, err := next[0](ctx, req)
+			return resp, err
+		}
+	}
+}
+
 func newProxy(l logging.Logger, config *xtraConfig, next proxy.Proxy) proxy.Proxy {
 	return func(ctx context.Context, r *proxy.Request) (*proxy.Response, error) {
 		if err := extractClaim(config, r); err != nil {
@@ -77,6 +112,9 @@ func configGetter(cfg config.ExtraConfig) *xtraConfig {
 }
 
 func extractClaim(config *xtraConfig, r *proxy.Request) error {
+	if config == nil {
+		return errors.New("Empty config, skip")
+	}
 	token := r.Headers[authHeader][0]
 	if token == "" {
 		return errors.New("Token is empty, skip extracting ")
